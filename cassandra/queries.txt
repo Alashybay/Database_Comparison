@@ -1,0 +1,17 @@
+Cassandra: 
+
+Easy:   
+    query = "SELECT * FROM books;"
+
+Intermediate:
+    SELECT title, author, publication_date
+    FROM books
+    WHERE publication_date >= '2021-01-01' AND publication_date < '2022-01-01';
+
+Complex:
+    SELECT title, author, name
+    FROM borrowing_history_by_year
+    WHERE year = 2023;
+
+Advanced:
+

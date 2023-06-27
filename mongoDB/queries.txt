@@ -1,0 +1,86 @@
+MongoDB:
+
+Simple:
+    pipeline = [
+    {
+        "$lookup": {
+            "from": "borrowing_history",
+            "localField": "book_id",
+            "foreignField": "book_id",
+            "as": "borrowers"
+        }
+    },
+    {
+        "$match": {
+            "borrowers": {"$ne": []}
+        }
+    }
+]
+
+Intermediate:
+    pipeline = [
+    {
+        "$match": {
+            "publication_date": {
+                "$regex": "^2021"
+            }
+        }
+    },
+    {
+        "$project": {
+            "_id": 0,
+            "title": 1,
+            "author": 1,
+            "publication_date": 1
+        }
+    }
+]
+
+Complex:
+pipeline = [
+  {
+    "$lookup": {
+      "from": "borrowing_history",
+      "localField": "book_id",
+      "foreignField": "book_id",
+      "as": "borrowing"
+    }
+  },
+  {
+    "$unwind": "$borrowing"
+  },
+  {
+    "$lookup": {
+      "from": "borrowers",
+      "localField": "borrowing.borrower_id",
+      "foreignField": "borrower_id",
+      "as": "borrower"
+    }
+  },
+  {
+    "$unwind": "$borrower"
+  },
+  {
+    "$match": {
+      "$expr": {
+        "$eq": [
+          { "$substr": ["$borrowing.borrow_date", 0, 4] },
+          "2023"
+        ]
+      }
+    }
+  },
+  {
+    "$project": {
+      "_id": 0,
+      "title": 1,
+      "author": 1,
+      "name": "$borrower.name"
+    }
+  }
+]
+
+Advanced:
+
+
+
