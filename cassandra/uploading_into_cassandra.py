@@ -2,15 +2,15 @@ from cassandra.cluster import Cluster
 from cassandra.query import BatchStatement
 
 # Connect to Cassandra
-cluster = Cluster(['9042:9042'])  # Replace with your Docker container IP
+cluster = Cluster(['localhost'], port=9042)
 session = cluster.connect()
 print('Successfully connected to Cassandra.')
 
 # Create keyspace
-session.execute("CREATE KEYSPACE IF NOT EXISTS library_250k WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1}")
+session.execute("CREATE KEYSPACE IF NOT EXISTS library_1m WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1}")
 
 # Use keyspace
-session.set_keyspace("library_250k")
+session.set_keyspace("library_1m")
 
 # Create books table
 session.execute("CREATE TABLE IF NOT EXISTS books (book_id INT PRIMARY KEY, title TEXT, author TEXT, publication_date DATE)")

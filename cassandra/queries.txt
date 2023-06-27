@@ -1,12 +1,13 @@
 Cassandra: 
 
 Easy:   
-    query = "SELECT * FROM books;"
+   SELECT * FROM books;
 
 Intermediate:
     SELECT title, author, publication_date
     FROM books
-    WHERE publication_date >= '2021-01-01' AND publication_date < '2022-01-01';
+    WHERE publication_date >= '2021-01-01' AND publication_date < '2022-01-01'
+    ALLOW FILTERING;
 
 Complex:
     SELECT title, author, name
