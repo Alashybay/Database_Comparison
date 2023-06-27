@@ -81,6 +81,33 @@ pipeline = [
 ]
 
 Advanced:
+pipeline = [
+    {
+        "$lookup": {
+            "from": "borrowing_history",
+            "localField": "book_id",
+            "foreignField": "book_id",
+            "as": "borrowing_history"
+        }
+    },
+    {
+        "$match": {
+            "borrowing_history.borrow_year": 2022,
+            "author": "Rebecca Patterson"
+        }
+    },
+    {
+        "$group": {
+            "_id": "$_id",
+            "title": {"$first": "$title"},
+            "author": {"$first": "$author"},
+            "borrow_date": {"$first": "$borrowing_history.borrow_date"}
+        }
+    },
+    {
+        "$sort": {"borrow_date": -1}
+    }
+]
 
 
 

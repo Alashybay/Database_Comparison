@@ -16,50 +16,35 @@ print("Successfully connected to the database.")
 
 # Define the aggregation pipeline stages
 pipeline = [
-  {
-    "$lookup": {
-      "from": "borrowing_history",
-      "localField": "book_id",
-      "foreignField": "book_id",
-      "as": "borrowing"
+    {
+        "$lookup": {
+            "from": "borrowing_history",
+            "localField": "book_id",
+            "foreignField": "book_id",
+            "as": "borrowing_history"
+        }
+    },
+    {
+        "$match": {
+            "borrowing_history.borrow_year": 2022,
+            "author": "Rebecca Patterson"
+        }
+    },
+    {
+        "$group": {
+            "_id": "$_id",
+            "title": {"$first": "$title"},
+            "author": {"$first": "$author"},
+            "borrow_date": {"$first": "$borrowing_history.borrow_date"}
+        }
+    },
+    {
+        "$sort": {"borrow_date": -1}
     }
-  },
-  {
-    "$unwind": "$borrowing"
-  },
-  {
-    "$lookup": {
-      "from": "borrowers",
-      "localField": "borrowing.borrower_id",
-      "foreignField": "borrower_id",
-      "as": "borrower"
-    }
-  },
-  {
-    "$unwind": "$borrower"
-  },
-  {
-    "$match": {
-      "$expr": {
-        "$eq": [
-          { "$substr": ["$borrowing.borrow_date", 0, 4] },
-          "2023"
-        ]
-      }
-    }
-  },
-  {
-    "$project": {
-      "_id": 0,
-      "title": 1,
-      "author": 1,
-      "name": "$borrower.name"
-    }
-  }
 ]
 
 # Execute the aggregation query 30 times and save the results in a file
-with open("runtime1m_q3.txt", "w") as file:
+with open("runtime1m_q4.txt", "w") as file:
     for i in range(1, 31):
         start_time = time.time()
         result = db.books.aggregate(pipeline)
@@ -70,10 +55,6 @@ with open("runtime1m_q3.txt", "w") as file:
 
         # Write the execution time to the file
         file.write(f"{i}. {execution_time:.3f} sec\n")
-
-        # Print the execution time to the console
-        print(f"{i}. {execution_time:.3f} sec")
-
     
 client.close()
 print("Successfully disconnected from MongoDB.")

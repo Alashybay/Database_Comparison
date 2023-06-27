@@ -16,23 +16,20 @@ Complex:
     WHERE DATE_FORMAT(bh.borrow_date, '%Y') = '2023';
 
 Advanced:
-    SELECT b.title, b.author, COUNT(*) AS total_borrows
+   SELECT b.title, b.author, bh.borrow_date
     FROM books b
     JOIN borrowing_history bh ON b.book_id = bh.book_id
-    JOIN borrowers bo ON bo.borrower_id = bh.borrower_id
     WHERE YEAR(bh.borrow_date) = 2022
-    GROUP BY b.title, b.author
+    GROUP BY b.title, b.author, bh.borrow_date
     HAVING COUNT(*) > (
         SELECT AVG(borrows_per_book)
         FROM (
             SELECT COUNT(*) AS borrows_per_book
-            FROM books b
-            JOIN borrowing_history bh ON b.book_id = bh.book_id
-            JOIN borrowers bo ON bo.borrower_id = bh.borrower_id
-            WHERE YEAR(bh.borrow_date) = 2022
-            GROUP BY b.title, b.author
+            FROM borrowing_history
+            WHERE YEAR(borrow_date) = 2022
+            GROUP BY book_id
         ) AS subquery
     )
-    ORDER BY total_borrows DESC;
-
+    AND b.author = 'Rebecca Patterson'
+    ORDER BY bh.borrow_date DESC;
 
