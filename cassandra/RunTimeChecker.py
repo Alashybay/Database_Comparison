@@ -1,41 +1,40 @@
-import time
 from cassandra.cluster import Cluster
+import time
 
-# Connect to the Cassandra cluster
-cluster = Cluster(['localhost'])
-session = cluster.connect('library_1m')
+# Connect to Cassandra cluster
+cluster = Cluster(['localhost'], port=9042)
+session = cluster.connect('library_250k')
 print('Connected to the Cassandra cluster.')
 
 # Define the queries
 queries = [
     """
-SELECT title, author, publication_date
-    FROM books
-    WHERE publication_date >= '2021-01-01' AND publication_date < '2022-01-01'
-    ALLOW FILTERING;
     """
 ]
 
-# Execute the queries and record the execution times
+# Run each query 30 times and record execution times
+execution_times = []
 for i, query in enumerate(queries):
-    execution_times = []
+    print(f"Running query {i+1}")
+    times = []
     for j in range(30):
         start_time = time.time()
-        result = session.execute(query)
+        session.execute(query)
         end_time = time.time()
         execution_time = end_time - start_time
-        execution_times.append(execution_time)
+        times.append(execution_time)
+    
+    execution_times.append(times)
+    print(f"Query {i+1} executed {len(times)} times.")
 
-    # Save the execution times in a text file
-    filename = f'runtime1m_q2.txt'
-    with open(filename, 'w') as file:
-        for j, time in enumerate(execution_times):
-            file.write(f'{j + 1}. {execution_time:.4f} sec\n')
+# Save execution times to a file
+with open("runtime250k_q3.txt", "w") as file:
+    for i, times in enumerate(execution_times):
+        file.write(f"{i+1}. {', '.join([f'{t:.4f} sec' for t in times])}\n")
 
-    print(f'DONE! Execution times saved in {filename}.')
+print("Execution times saved in runtime250k_q3.txt.")
 
-# Disconnect from the Cassandra cluster
+# Close the connection
 session.shutdown()
-print('Disconnected from the Cassandra cluster.')
 cluster.shutdown()
 print('Disconnected from the Cassandra cluster.')

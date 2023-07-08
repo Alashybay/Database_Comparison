@@ -10,9 +10,7 @@ Intermediate:
     ALLOW FILTERING;
 
 Complex:
-    SELECT title, author, name
-    FROM borrowing_history_by_year
-    WHERE year = 2023;
+    
 
 Advanced:
 
