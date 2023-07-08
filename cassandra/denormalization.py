@@ -8,25 +8,28 @@ session = cluster.connect('library_250k')
 # Create the denormalized_data table
 create_table_query = """
     CREATE TABLE IF NOT EXISTS denormalized_data (
-        book_id UUID,
-        title TEXT,
-        author TEXT,
-        borrower_id UUID,
-        borrower_name TEXT,
-        borrow_date TIMESTAMP,
-        PRIMARY KEY (book_id, borrow_date)
+        book_id INT PRIMARY KEY, 
+        title TEXT, 
+        author TEXT, 
+        publication_date DATE,
+        borrower_id INT,
+        name TEXT, 
+        email TEXT,
+        borrowing_id INT,
+        borrow_date DATE, 
+        return_date DATE,
     );
 """
 session.execute(create_table_query)
 
 # Insert data into the denormalized_data table using separate queries
-insert_books_query = "INSERT INTO denormalized_data (book_id, title, author) SELECT book_id, title, author FROM books;"
+insert_books_query = "INSERT INTO denormalized_data (book_id, title, author, publication_date) SELECT book_id, title, author, publication_date FROM books;"
 session.execute(insert_books_query)
 
-insert_borrowing_his_query = "INSERT INTO denormalized_data (book_id, borrower_id, borrow_date) SELECT book_id, borrower_id, borrow_date FROM borrowing_history;"
+insert_borrowing_his_query = "INSERT INTO denormalized_data (borrowing_id,borrower_id,borrow_date,return_date) SELECT borrowing_id,book_id,borrower_id,borrow_date,return_date FROM borrowing_history;"
 session.execute(insert_borrowing_his_query)
 
-insert_borrowers_query = "INSERT INTO denormalized_data (borrower_name) SELECT name FROM borrowers;"
+insert_borrowers_query = "INSERT INTO denormalized_data (borrower_id,name,email) SELECT borrower_id,name,email FROM borrowers;"
 session.execute(insert_borrowers_query)
 
 # Perform a complex query on the denormalized_data table

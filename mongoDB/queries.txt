@@ -1,21 +1,8 @@
 MongoDB:
 
 Simple:
-    pipeline = [
-    {
-        "$lookup": {
-            "from": "borrowing_history",
-            "localField": "book_id",
-            "foreignField": "book_id",
-            "as": "borrowers"
-        }
-    },
-    {
-        "$match": {
-            "borrowers": {"$ne": []}
-        }
-    }
-]
+  db.books.find({})
+
 
 Intermediate:
     pipeline = [

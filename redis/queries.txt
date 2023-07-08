@@ -1,7 +1,27 @@
 REDIS:
 
 Easy:
+    KEYS book:*
+    
+    book_keys = r.keys('book:*')
+
+    for key in book_keys:
+        values = r.hvals(key)
 
 Intermediate: 
+    for key in r.scan_iter(match='book:*'):
+        book_data = r.hgetall(key)
+        publication_date = book_data.get(b'publication_date', b'').decode()
+        if publication_date.startswith('2021'):
+            title = book_data.get(b'title', b'').decode()
+            author = book_data.get(b'author', b'').decode()
+            matching_books.append({'title': title, 'author': author, 'publication_date': publication_date})
+
+    end_time = time.time()
+    execution_time = end_time - start_time
+    execution_times.append(execution_time)
+    
+
+Complex:
 
 Advanced:
