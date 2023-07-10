@@ -10,7 +10,183 @@ Intermediate:
     ALLOW FILTERING;
 
 Complex:
-    
+    from cassandra.cluster import Cluster
+    import time
+
+    # Connect to Cassandra cluster
+    cluster = Cluster(['localhost'], port=9042)
+    session = cluster.connect('library_250k')
+
+    # Define the number of iterations
+    num_iterations = 30
+
+    # Execute the queries multiple times and record execution times
+    execution_times = []
+    for _ in range(num_iterations):
+        start_time = time.time()
+
+        # Query: Retrieve borrowing_history for a specific year
+        borrowing_history_query = """
+            SELECT book_id, borrower_id, borrow_date
+            FROM borrowing_history
+            WHERE borrow_date >= '2023-01-01' AND borrow_date < '2024-01-01'
+            ALLOW FILTERING
+        """
+
+        # Execute the borrowing_history query
+        borrowing_history_rows = session.execute(borrowing_history_query)
+
+        # Retrieve book IDs and borrower IDs for the specific year
+        book_ids = [row.book_id for row in borrowing_history_rows]
+        borrower_ids = [row.borrower_id for row in borrowing_history_rows]
+
+        # Query: Retrieve books for the retrieved book IDs
+        books_query = """
+            SELECT book_id, title, author
+            FROM books
+            WHERE book_id IN {}
+            ALLOW FILTERING
+        """
+
+        # Format the book IDs for the IN clause in the books query
+        formatted_book_ids = str(book_ids).replace('[', '(').replace(']', ')')
+
+        # Execute the books query
+        books_query = books_query.format(formatted_book_ids)
+        books_rows = session.execute(books_query)
+
+        # Create a dictionary to map book IDs to book titles and authors
+        books_mapping = {row.book_id: {'title': row.title, 'author': row.author} for row in books_rows}
+
+        # Query: Retrieve borrowers for the retrieved borrower IDs
+        borrowers_query = """
+            SELECT borrower_id, name
+            FROM borrowers
+            WHERE borrower_id IN {}
+            ALLOW FILTERING
+        """
+
+        # Format the borrower IDs for the IN clause in the borrowers query
+        formatted_borrower_ids = str(borrower_ids).replace('[', '(').replace(']', ')')
+
+        # Execute the borrowers query
+        borrowers_query = borrowers_query.format(formatted_borrower_ids)
+        borrowers_rows = session.execute(borrowers_query)
+
+        # Create a dictionary to map borrower IDs to borrower names
+        borrowers_mapping = {row.borrower_id: row.name for row in borrowers_rows}
+
+        # Process the results
+        results = []
+        for row in borrowing_history_rows:
+            book_id = row.book_id
+            borrower_id = row.borrower_id
+            borrow_date = row.borrow_date
+            title = books_mapping.get(book_id, {}).get('title', '')
+            author = books_mapping.get(book_id, {}).get('author', '')
+            borrower_name = borrowers_mapping.get(borrower_id, '')
+            results.append(f"Title: {title}, Author: {author}, Borrower Name: {borrower_name}, Borrow Date: {borrow_date}")
+
+        end_time = time.time()
+        execution_time = end_time - start_time
+        execution_times.append(execution_time)
+
+        # Save results in a text file
+        with open('cassandra_query_results.txt', 'a') as file:
+            file.write(f"Execution Time: {execution_time:.4f} sec\n")
+            for result in results:
+                file.write(result + "\n")
+            file.write("\n")
+
+    # Save execution times in a text file
+    with open('cassandra_query_execution_times.txt', 'w') as file:
+        for i, time in enumerate(execution_times, 1):
+            file.write(f'{i}. {time:.4f} sec\n')
+
+    # Close the connection
+    session.shutdown()
+    cluster.shutdown()
+
 
 Advanced:
+    from cassandra.cluster import Cluster
+    import time
+
+    # Connect to Cassandra cluster
+    cluster = Cluster(['localhost'], port=9042)
+    session = cluster.connect('library_250k')
+    num_iterations = 30
+
+    execution_times = []
+    for i in range(num_iterations):
+        start_time = time.time()
+        # Query 1: Retrieve book IDs and author for a specific author
+        author_books_query = """
+            SELECT book_id, author
+            FROM books
+            WHERE author = 'Rebecca Patterson'
+            ALLOW FILTERING
+        """
+
+        # Execute the author books query
+        author_books_rows = session.execute(author_books_query)
+
+        # Retrieve the book IDs from the query result
+        book_ids = [row.book_id for row in author_books_rows]
+
+        # Query 2: Retrieve borrowing history for the retrieved book IDs in the specified year
+        borrowing_history_query = """
+            SELECT book_id, borrow_date
+            FROM borrowing_history
+            WHERE book_id IN {} 
+            AND borrow_date >= '2022-01-01' AND borrow_date < '2023-01-01'
+            ALLOW FILTERING
+        """
+
+        # Format the book IDs for the IN clause in the borrowing history query
+        formatted_book_ids = str(book_ids).replace('[', '(').replace(']', ')')
+
+        # Execute the borrowing history query
+        borrowing_history_query = borrowing_history_query.format(formatted_book_ids)
+        borrowing_history_rows = session.execute(borrowing_history_query)
+
+        # Create a dictionary to map book IDs to borrow dates
+        borrow_dates_mapping = {row.book_id: row.borrow_date for row in borrowing_history_rows}
+
+        # Query 3: Retrieve book titles for the retrieved book IDs
+        books_query = """
+            SELECT book_id, title
+            FROM books
+            WHERE book_id IN {}
+            ALLOW FILTERING
+        """
+
+        # Execute the books query
+        books_query = books_query.format(formatted_book_ids)
+        books_rows = session.execute(books_query)
+
+        # Create a dictionary to map book IDs to book titles
+        book_titles_mapping = {row.book_id: row.title for row in books_rows}
+
+        # Process the results and print
+        for book_id in book_ids:
+            author = "Rebecca Patterson"
+            title = book_titles_mapping.get(book_id, "")
+            borrow_date = borrow_dates_mapping.get(book_id, "")
+            # print(f"Title: {title}, Author: {author}, Borrow Date: {borrow_date}")
+        
+        end_time = time.time()
+        execution_time = end_time - start_time
+        execution_times.append(execution_time)
+
+    # Save execution times in a text file
+    with open('runtime250k_q4.txt', 'w') as file:
+        for i, time in enumerate(execution_times, 1):
+            file.write(f' {i}: {time:.4f} sec\n')
+    print('done')
+
+    # Close the connection
+    session.shutdown()
+    cluster.shutdown()
+
 

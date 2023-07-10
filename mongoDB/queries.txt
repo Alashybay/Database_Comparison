@@ -24,77 +24,77 @@ Intermediate:
 ]
 
 Complex:
-pipeline = [
-  {
-    "$lookup": {
-      "from": "borrowing_history",
-      "localField": "book_id",
-      "foreignField": "book_id",
-      "as": "borrowing"
-    }
-  },
-  {
-    "$unwind": "$borrowing"
-  },
-  {
-    "$lookup": {
-      "from": "borrowers",
-      "localField": "borrowing.borrower_id",
-      "foreignField": "borrower_id",
-      "as": "borrower"
-    }
-  },
-  {
-    "$unwind": "$borrower"
-  },
-  {
-    "$match": {
-      "$expr": {
-        "$eq": [
-          { "$substr": ["$borrowing.borrow_date", 0, 4] },
-          "2023"
-        ]
+  pipeline = [
+    {
+      "$lookup": {
+        "from": "borrowing_history",
+        "localField": "book_id",
+        "foreignField": "book_id",
+        "as": "borrowing"
+      }
+    },
+    {
+      "$unwind": "$borrowing"
+    },
+    {
+      "$lookup": {
+        "from": "borrowers",
+        "localField": "borrowing.borrower_id",
+        "foreignField": "borrower_id",
+        "as": "borrower"
+      }
+    },
+    {
+      "$unwind": "$borrower"
+    },
+    {
+      "$match": {
+        "$expr": {
+          "$eq": [
+            { "$substr": ["$borrowing.borrow_date", 0, 4] },
+            "2023"
+          ]
+        }
+      }
+    },
+    {
+      "$project": {
+        "_id": 0,
+        "title": 1,
+        "author": 1,
+        "name": "$borrower.name"
       }
     }
-  },
-  {
-    "$project": {
-      "_id": 0,
-      "title": 1,
-      "author": 1,
-      "name": "$borrower.name"
-    }
-  }
-]
+  ]
 
 Advanced:
-pipeline = [
-    {
-        "$lookup": {
-            "from": "borrowing_history",
-            "localField": "book_id",
-            "foreignField": "book_id",
-            "as": "borrowing_history"
-        }
-    },
-    {
-        "$match": {
-            "borrowing_history.borrow_year": 2022,
-            "author": "Rebecca Patterson"
-        }
-    },
-    {
-        "$group": {
-            "_id": "$_id",
-            "title": {"$first": "$title"},
-            "author": {"$first": "$author"},
-            "borrow_date": {"$first": "$borrowing_history.borrow_date"}
-        }
-    },
-    {
-        "$sort": {"borrow_date": -1}
-    }
-]
+  pipeline = [
+      {
+          "$lookup": {
+              "from": "borrowing_history",
+              "localField": "book_id",
+              "foreignField": "book_id",
+              "as": "borrowing_history"
+          }
+      },
+      {
+          "$match": {
+              "borrowing_history.borrow_year": 2022,
+              "author": "Rebecca Patterson"
+          }
+      },
+      {
+          "$group": {
+              "_id": "$_id",
+              "title": {"$first": "$title"},
+              "author": {"$first": "$author"},
+              "borrow_date": {"$first": "$borrowing_history.borrow_date"}
+          }
+      },
+      {
+          "$sort": {"borrow_date": -1}
+      }
+  ]
 
 
 

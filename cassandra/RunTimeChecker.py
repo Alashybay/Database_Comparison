@@ -38,3 +38,4 @@ print("Execution times saved in runtime250k_q3.txt.")
 session.shutdown()
 cluster.shutdown()
 print('Disconnected from the Cassandra cluster.')
+
