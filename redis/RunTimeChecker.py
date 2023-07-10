@@ -20,7 +20,6 @@ for _ in range(num_iterations):
             if publication_date.startswith(b'2021'):
                 count += 1
                 
-
     end_time = time.time()
     execution_time = end_time - start_time
     execution_times.append(execution_time)

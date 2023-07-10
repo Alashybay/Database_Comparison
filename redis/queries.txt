@@ -1,26 +1,73 @@
 REDIS:
 
 Easy:
-    KEYS book:*
-    
-    book_keys = r.keys('book:*')
+    import redis
+    import time
 
-    for key in book_keys:
-        values = r.hvals(key)
+    # Connect to Redis
+    r = redis.Redis(host='localhost', port=6379, db=0)
+
+    iterations = 30
+    execution_times = []
+
+    for i in range(iterations):
+        start = time.time()
+        # Retrieve all books
+        book_keys = r.keys('book:*')
+
+        for key in book_keys:
+            book = r.hgetall(key)
+            print(book)
+
+        end = time.time()
+        exectition_time = end - start
+        execution_times.append(exectition_time)
+
+    with open('runtime240k_q1.txt', 'w') as file:
+        for i, time in enumerate(execution_times, 1):
+            file.write(f'{i}. {time:.4f} sec\n')
+
+    # Close the Redis connection
+    r.close()
+
 
 Intermediate: 
-    for key in r.scan_iter(match='book:*'):
-        book_data = r.hgetall(key)
-        publication_date = book_data.get(b'publication_date', b'').decode()
-        if publication_date.startswith('2021'):
-            title = book_data.get(b'title', b'').decode()
-            author = book_data.get(b'author', b'').decode()
-            matching_books.append({'title': title, 'author': author, 'publication_date': publication_date})
+    import redis
+    import time
 
-    end_time = time.time()
-    execution_time = end_time - start_time
-    execution_times.append(execution_time)
-    
+    # Connect to Redis
+    r = redis.Redis(host='localhost', port=6379, db=0)
+
+    # Define the number of iterations
+    num_iterations = 30
+
+    # Execute the query multiple times and record execution times
+    execution_times = []
+    for _ in range(num_iterations):
+        start_time = time.time()
+
+        # Query: Retrieve books based on publication_date pattern
+        book_keys = r.keys('book:*')
+        for key in book_keys:
+            book_data = r.hgetall(key)
+            if book_data:
+                publication_date = book_data.get(b'publication_date', b'').decode()
+                if publication_date.startswith('2021'):
+                    title = book_data.get(b'title', b'').decode()
+                    author = book_data.get(b'author', b'').decode()
+
+        end_time = time.time()
+        execution_time = end_time - start_time
+        execution_times.append(execution_time)
+
+    # Save execution times in a text file
+    with open('redis_query_execution_times.txt', 'w') as file:
+        for i, time in enumerate(execution_times, 1):
+            file.write(f'{i}. {time:.4f} sec\n')
+
+    # Close the Redis connection
+    r.close()
+
 
 Complex:
 

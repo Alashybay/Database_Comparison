@@ -2,20 +2,23 @@ import redis
 import time
 
 # Connect to Redis
-r = redis.Redis(host='localhost', port=6379, db=0)
+r = redis.Redis(host='localhost', port=6379)
 
-def getAllBooks():
-    # get all the book keys
-    keys = r.keys('book:*')
 
-    # retrieve values for each book key
-    for key in keys:
-        book = r.hvals(key)
-        print(book)
+# Retrieve book IDs for the specified year
+start_timestamp = int(time.mktime(time.strptime(f'2023-01-01', '%Y-%m-%d')))
+end_timestamp = int(time.mktime(time.strptime(f'2024-01-01', '%Y-%m-%d')))
+book_ids = r.zrangebyscore('borrowing_history', start_timestamp, end_timestamp)
 
-    return books
+# Retrieve book details and borrower names
 
-getAllBooks()
+for book_id in book_ids:
+    book_details = r.hgetall(f'book:{book_id}')
+    borrower_id = r.hget('borrowing_history', f'borrowing:{book_id}:borrower_id')
+    borrower_name = r.hget('borrowers', f'borrower:{borrower_id}:name')
+
+    # print book title, book author, and borrower name
+    print(f'{book_details[b"title"].decode("utf-8")} by {book_details[b"author"].decode("utf-8")}, borrowed by {borrower_name.decode("utf-8")}')
 
 # Close the Redis connection
 r.close()
