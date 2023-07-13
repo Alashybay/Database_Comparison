@@ -2,12 +2,12 @@ import csv
 import redis
 
 # Connect to Redis container
-r = redis.Redis(host='localhost', port=6379, db=0)
+r = redis.Redis(host='localhost', port=6379, db=3)
 print('Connected to Redis container!')
 
 # 0 -> 250k done
-# 1 -> 500k need to do
-# 2 -> 750k need to do
+# 1 -> 500k done
+# 2 -> 750k done
 # 3 -> 1M need to do
 
 # Insert data from books.csv into Redis

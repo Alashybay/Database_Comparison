@@ -70,5 +70,35 @@ Intermediate:
 
 
 Complex:
+    import redis
+
+    # Connect to Redis
+    r = redis.Redis(host='localhost', port=6379, db=0)
+
+    # Retrieve borrowing history IDs with filtering
+    borrowing_keys = r.keys("borrowing_history:*")
+    #print(borrowing_keys)
+    
+    for key in borrowing_keys:
+        borrowing = r.hgetall(key)
+        borrow_date = borrowing[b'borrow_date'].decode('utf-8')
+
+        # Filter by borrow_date
+        if borrow_date.startswith('2023'):
+            borrowing_id = key.decode('utf-8').split(':')[1]
+            book_key = "book:" + borrowing_id
+            borrower_key = "borrower:" + borrowing_id
+
+            # Retrieve book and borrower data
+            book = r.hgetall(book_key)
+            borrower = r.hgetall(borrower_key)
+
+            # Print the result
+            result = {
+                'title': book[b'title'].decode('utf-8'),
+                'author': book[b'author'].decode('utf-8'),
+                'name': borrower[b'name'].decode('utf-8')
+            }
+            print(result)
 
 Advanced:
