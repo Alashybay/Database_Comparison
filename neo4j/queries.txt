@@ -1,4 +1,5 @@
-Neo4J:
+Neo4J: docker exec -it neo4j-container /bin/bash
+
 
 Easy:
     MATCH (b:Book) RETURN b
