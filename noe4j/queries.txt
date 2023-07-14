@@ -1,9 +1,32 @@
 Neo4J:
 
 Easy:
+    MATCH (b:Book) RETURN b
 
 Intermediate: 
+    MATCH (b:Book)
+    WHERE b.publication_date STARTS WITH '2021'
+    RETURN b.title, b.author, b.publication_date;
     
 Complex:
+    MATCH (b:Book), (bh:BorrowingHistory), (bo:Borrower)
+    WHERE b.book_id = bh.book_id
+    AND bo.borrower_id = bh.borrower_id
+    AND substring(bh.borrow_date, 0, 4) = '2023'
+    RETURN b.title, b.author, bo.name;
 
 Advanced:
+    MATCH (bh:BorrowingHistory)
+    WHERE substring(bh.borrow_date, 0, 4) = '2022'
+    WITH collect(DISTINCT bh.book_id) AS book_ids, collect(DISTINCT bh.borrow_date) AS borrow_dates
+
+
+    MATCH (b:Book)
+    WHERE b.author = 'Rebecca Patterson'
+    RETURN b.book_id AS book_id, b.title AS title, b.author AS author
+
+
+    WITH book_ids, borrow_dates
+    MATCH (bo:Borrower)
+    WHERE EXISTS((bo)-[:BORROWED]->(:BorrowingHistory {book_id: book_ids[0]}))
+    RETURN title, author, borrow_dates[0] AS borrow_date, bo.name AS borrower_name;

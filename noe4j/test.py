@@ -31,8 +31,9 @@ def getAllBooksByYear(year):
     result = session.run(
         """
         MATCH (b:Book)
-        WHERE b.publication_date STARTS WITH $year
-        RETURN b
+        WHERE b.publication_date STARTS WITH '2021'
+        RETURN b.title, b.author, b.publication_date;
+
         """,
         {
             "year": str(year)
@@ -53,9 +54,12 @@ def getBorrowingHistoryByYear(year):
     
     result = session.run(
         """
-        MATCH (b:Book)<-[bh:BORROWED]-(bo:Borrower)
-        WHERE bh.borrow_date STARTS WITH $year
-        RETURN b.title, b.author, bo.name
+        MATCH (b:Book), (bh:BorrowingHistory), (bo:Borrower)
+        WHERE b.book_id = bh.book_id
+        AND bo.borrower_id = bh.borrower_id
+        AND substring(bh.borrow_date, 0, 4) = '2023'
+        RETURN b.title, b.author, bo.name;
+
         """,
         {
             "year": str(year)
