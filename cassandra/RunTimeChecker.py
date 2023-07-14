@@ -12,12 +12,12 @@ queries = [
     """
 ]
 
-# Run each query 30 times and record execution times
+# Run each query 31 times and record execution times
 execution_times = []
 for i, query in enumerate(queries):
     print(f"Running query {i+1}")
     times = []
-    for j in range(30):
+    for j in range(31):
         start_time = time.time()
         session.execute(query)
         end_time = time.time()

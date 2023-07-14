@@ -18,7 +18,7 @@ Complex:
     session = cluster.connect('library_250k')
 
     # Define the number of iterations
-    num_iterations = 30
+    num_iterations = 31
 
     # Execute the queries multiple times and record execution times
     execution_times = []
@@ -115,7 +115,7 @@ Advanced:
     # Connect to Cassandra cluster
     cluster = Cluster(['localhost'], port=9042)
     session = cluster.connect('library_250k')
-    num_iterations = 30
+    num_iterations = 31
 
     execution_times = []
     for i in range(num_iterations):

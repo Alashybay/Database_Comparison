@@ -7,7 +7,7 @@ Easy:
     # Connect to Redis
     r = redis.Redis(host='localhost', port=6379, db=0)
 
-    iterations = 30
+    iterations = 31
     execution_times = []
 
     for i in range(iterations):
@@ -39,7 +39,7 @@ Intermediate:
     r = redis.Redis(host='localhost', port=6379, db=0)
 
     # Define the number of iterations
-    num_iterations = 30
+    num_iterations = 31
 
     # Execute the query multiple times and record execution times
     execution_times = []
@@ -61,7 +61,7 @@ Intermediate:
         execution_times.append(execution_time)
 
     # Save execution times in a text file
-    with open('redis_query_execution_times.txt', 'w') as file:
+    with open('runtime240k_q2.txt', 'w') as file:
         for i, time in enumerate(execution_times, 1):
             file.write(f'{i}. {time:.4f} sec\n')
 
@@ -71,34 +71,112 @@ Intermediate:
 
 Complex:
     import redis
+    import time
 
     # Connect to Redis
     r = redis.Redis(host='localhost', port=6379, db=0)
 
-    # Retrieve borrowing history IDs with filtering
-    borrowing_keys = r.keys("borrowing_history:*")
-    #print(borrowing_keys)
-    
-    for key in borrowing_keys:
-        borrowing = r.hgetall(key)
-        borrow_date = borrowing[b'borrow_date'].decode('utf-8')
+    iterations = 31
+    execution_times = []
+    for i in range(iterations):
+        start = time.time()
 
-        # Filter by borrow_date
-        if borrow_date.startswith('2023'):
-            borrowing_id = key.decode('utf-8').split(':')[1]
-            book_key = "book:" + borrowing_id
-            borrower_key = "borrower:" + borrowing_id
+        # Retrieve borrowing history IDs with filtering
+        borrowing_keys = r.keys("borrowing_history:*")
+        #print(borrowing_keys)
+        
+        for key in borrowing_keys:
+            borrowing = r.hgetall(key)
+            borrow_date = borrowing[b'borrow_date'].decode('utf-8')
 
-            # Retrieve book and borrower data
-            book = r.hgetall(book_key)
-            borrower = r.hgetall(borrower_key)
+            # Filter by borrow_date
+            if borrow_date.startswith('2023'):
+                borrowing_id = key.decode('utf-8').split(':')[1]
+                book_key = "book:" + borrowing_id
+                borrower_key = "borrower:" + borrowing_id
 
-            # Print the result
-            result = {
-                'title': book[b'title'].decode('utf-8'),
-                'author': book[b'author'].decode('utf-8'),
-                'name': borrower[b'name'].decode('utf-8')
-            }
-            print(result)
+                # Retrieve book and borrower data
+                book = r.hgetall(book_key)
+                borrower = r.hgetall(borrower_key)
+
+        end_time = time.time()
+        exectition_time = end_time - start
+        execution_times.append(exectition_time)
+
+    # Save execution times in a text file
+    with open('runtime240k_q3.txt', 'w') as file:
+        for i, time in enumerate(execution_times, 1):
+            file.write(f'{i}. {time:.4f} sec\n')
+
+    # Close the Redis connection
+    r.close()
+            
 
 Advanced:
+import redis
+import time
+
+# Connect to Redis
+r = redis.Redis(host='localhost', port=6379, db=0)
+
+# Define the number of iterations
+num_iterations = 31
+execution_times = []
+
+# Execute the code multiple times
+for i in range(num_iterations):
+    start_time = time.time()
+
+    # Your existing code here
+    # Step 1: Fetch all book IDs
+    book_ids = []
+    books = r.keys("book:*")
+    for book_key in books:
+        book = r.hgetall(book_key)
+        if b'book_id' in book:
+            book_id = book[b'book_id'].decode('utf-8')
+            book_ids.append(book_id)
+
+    # Step 2: Filter books by author and borrowing year
+    for book_id in book_ids:
+        book_key = f"book:{book_id}"
+        book = r.hgetall(book_key)
+        if book.get(b'author', b'').decode('utf-8') == 'Rebecca Patterson':
+            borrowing_key = f"borrowing_history:{book_id}"
+            borrowings = r.smembers(borrowing_key)
+            for borrowing in borrowings:
+                borrow_data = r.hgetall(borrowing)
+                borrow_date = borrow_data.get(b'borrow_date', b'').decode('utf-8')
+                if borrow_date.startswith('2022'):
+                    result = {
+                        'title': book.get(b'title', b'').decode('utf-8'),
+                        'author': book.get(b'author', b'').decode('utf-8'),
+                        'borrow_date': borrow_date
+                    }
+                    print(result)
+
+    # Step 3: Compute average borrows per book
+    borrowing_key = f"borrowing_history:{book_id}"
+    borrowings = r.smembers(borrowing_key)
+    borrow_count = len(borrowings)
+    avg_borrows_per_book = sum(len(r.smembers(f"borrowing_history:{other_book_id}")) for other_book_id in book_ids) / len(book_ids)
+
+    # Step 4: Filter books with borrow count greater than average
+    if borrow_count > avg_borrows_per_book:
+        result = {
+            'title': book.get(b'title', b'').decode('utf-8'),
+            'author': book.get(b'author', b'').decode('utf-8'),
+            'borrow_date': borrow_date
+        }
+        print(result)
+
+    end_time = time.time()
+    execution_time = end_time - start_time
+    execution_times.append(execution_time)
+
+# Write execution times to a file
+with open('runtime250k_q4.txt', 'w') as f:
+    for i, time in enumerate(execution_times, 1):
+        f.write(f"{i+1},{time:.4f} sec\n")
+
+r.close()

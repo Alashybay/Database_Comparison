@@ -55,7 +55,7 @@ queries = [
 ]
 
 # Define the number of times to execute each query
-num_executions = 30
+num_executions = 31
 
 # Iterate through the queries and execute each one
 for i, query in enumerate(queries):

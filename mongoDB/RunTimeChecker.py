@@ -1,60 +1,68 @@
-import pymongo
+import redis
 import time
-import os
 
-# Connect to MongoDB and specify the database
-client = pymongo.MongoClient("mongodb://localhost:27018")
-try:
-    client.server_info()  # Check connection by accessing server info
-except pymongo.errors.ConnectionFailure:
-    print("Failed to connect to MongoDB.")
-    exit()
-print("Successfully connected to MongoDB.")
+# Connect to Redis
+r = redis.Redis(host='localhost', port=6379, db=0)
 
-db = client["library1m"]
-print("Successfully connected to the database.")
+# Define the number of iterations
+num_iterations = 31
 
-# Define the aggregation pipeline stages
-pipeline = [
-    {
-        "$lookup": {
-            "from": "borrowing_history",
-            "localField": "book_id",
-            "foreignField": "book_id",
-            "as": "borrowing_history"
+# Open the file to write the execution times
+file_name = "execution_times.txt"
+file = open(file_name, "w")
+
+# Execute the code multiple times
+for i in range(num_iterations):
+    start_time = time.time()
+
+    # Your existing code here
+    # Step 1: Fetch all book IDs
+    book_ids = []
+    books = r.keys("book:*")
+    for book_key in books:
+        book = r.hgetall(book_key)
+        if b'book_id' in book:
+            book_id = book[b'book_id'].decode('utf-8')
+            book_ids.append(book_id)
+
+    # Step 2: Filter books by author and borrowing year
+    for book_id in book_ids:
+        book_key = f"book:{book_id}"
+        book = r.hgetall(book_key)
+        if book.get(b'author', b'').decode('utf-8') == 'Rebecca Patterson':
+            borrowing_key = f"borrowing_history:{book_id}"
+            borrowings = r.smembers(borrowing_key)
+            for borrowing in borrowings:
+                borrow_data = r.hgetall(borrowing)
+                borrow_date = borrow_data.get(b'borrow_date', b'').decode('utf-8')
+                if borrow_date.startswith('2022'):
+                    result = {
+                        'title': book.get(b'title', b'').decode('utf-8'),
+                        'author': book.get(b'author', b'').decode('utf-8'),
+                        'borrow_date': borrow_date
+                    }
+                    print(result)
+
+    # Step 3: Compute average borrows per book
+    borrowing_key = f"borrowing_history:{book_id}"
+    borrowings = r.smembers(borrowing_key)
+    borrow_count = len(borrowings)
+    avg_borrows_per_book = sum(len(r.smembers(f"borrowing_history:{other_book_id}")) for other_book_id in book_ids) / len(book_ids)
+
+    # Step 4: Filter books with borrow count greater than average
+    if borrow_count > avg_borrows_per_book:
+        result = {
+            'title': book.get(b'title', b'').decode('utf-8'),
+            'author': book.get(b'author', b'').decode('utf-8'),
+            'borrow_date': borrow_date
         }
-    },
-    {
-        "$match": {
-            "borrowing_history.borrow_year": 2022,
-            "author": "Rebecca Patterson"
-        }
-    },
-    {
-        "$group": {
-            "_id": "$_id",
-            "title": {"$first": "$title"},
-            "author": {"$first": "$author"},
-            "borrow_date": {"$first": "$borrowing_history.borrow_date"}
-        }
-    },
-    {
-        "$sort": {"borrow_date": -1}
-    }
-]
+        print(result)
 
-# Execute the aggregation query 30 times and save the results in a file
-with open("runtime1m_q4.txt", "w") as file:
-    for i in range(1, 31):
-        start_time = time.time()
-        result = db.books.aggregate(pipeline)
-        end_time = time.time()
+    end_time = time.time()
+    execution_time = end_time - start_time
+    file.write(f"Execution {i+1}: {execution_time} seconds\n")
 
-        # Calculate the execution time
-        execution_time = end_time - start_time
+# Close the file
+file.close()
 
-        # Write the execution time to the file
-        file.write(f"{i}. {execution_time:.3f} sec\n")
-    
-client.close()
-print("Successfully disconnected from MongoDB.")
+print(f"Execution times written to {file_name}")

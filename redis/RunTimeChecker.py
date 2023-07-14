@@ -5,7 +5,7 @@ import time
 r = redis.Redis(host='localhost', port=6379)
 
 # Define the number of iterations
-num_iterations = 30
+num_iterations = 31
 count = 0
 # Execute the code multiple times and record execution times
 execution_times = []
